@@ -12,9 +12,16 @@
   "tauri": {
     "allowlist": {
       "all": false,
+      "globalShortcut": {
+        "all": true
+      },
       "shell": {
         "all": false,
         "open": true
+      },
+      "window": {
+        "show": true,
+        "setFocus": true
       }
     },
     "bundle": {
@@ -31,6 +38,10 @@
     },
     "security": {
       "csp": null
+    },
+    "systemTray": {
+      "iconPath": "icons/icon.png",
+      "iconAsTemplate": true
     },
     "windows": [
       {
