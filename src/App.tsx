@@ -4,6 +4,7 @@ import {
   register,
   unregister,
 } from "@tauri-apps/api/globalShortcut";
+import { sendNotification } from "@tauri-apps/api/notification";
 import { createSignal, onMount } from "solid-js";
 
 function App() {
@@ -25,6 +26,10 @@ function App() {
       .finally(() => {
         register(hotkey, () => {
           action();
+          sendNotification({
+            title: "Rest",
+            body: `Brightness set to ${Math.trunc(brightness() * 100)}%`,
+          });
         })!;
       });
   };
