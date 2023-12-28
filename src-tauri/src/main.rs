@@ -3,10 +3,12 @@
 
 use tauri::{CustomMenuItem, Manager, SystemTrayEvent, SystemTrayMenuItem};
 
-// Learn more about Tauri commands at https://tauri.app/v1/guides/features/command
 #[tauri::command]
-fn greet(name: &str) -> String {
-    format!("Hello, {}! You've been greeted from Rust!", name)
+fn redshift(color: &str, brightness: &str) {
+    std::process::Command::new("redshift")
+        .args(["-P", "-O", color, "-b", brightness])
+        .spawn()
+        .expect("failed to execute process");
 }
 
 fn main() {
@@ -23,7 +25,7 @@ fn main() {
         .add_item(quit);
     let system_tray = tauri::SystemTray::new().with_menu(tray_menu);
     tauri::Builder::default()
-        .invoke_handler(tauri::generate_handler![greet])
+        .invoke_handler(tauri::generate_handler![redshift])
         .system_tray(system_tray)
         .on_system_tray_event(|app, event| {
             if let SystemTrayEvent::MenuItemClick { id, .. } = event {

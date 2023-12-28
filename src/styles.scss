@@ -2,7 +2,15 @@
 @tailwind components;
 @tailwind utilities;
 
-@layer base {}
+@layer base {
+  body {
+    @apply bg-gray-800 text-white;
+  }
+
+  input {
+    @apply mx-1 rounded border border-black bg-gray-500 px-1 text-white shadow shadow-black;
+  }
+}
 
 @layer components {}
 
