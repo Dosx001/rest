@@ -32,6 +32,7 @@ function App() {
       });
   };
   onMount(() => {
+    invoke("cron").catch(console.error);
     createHotkey("Alt+PageUp", () => {
       if (brightness() === 100) {
         return;

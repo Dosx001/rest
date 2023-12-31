@@ -21,6 +21,23 @@ fn redshift(color: &str, brightness: &str, state: State<Redshit>) {
 }
 
 #[tauri::command]
+async fn cron(state: State<'_, Redshit>) -> Result<(), ()> {
+    let color = state.color.lock().unwrap().clone();
+    let brightness = state.brightness.lock().unwrap().clone();
+    let sched = tokio_cron_scheduler::JobScheduler::new().await.unwrap();
+    let _ = sched
+        .add(
+            tokio_cron_scheduler::Job::new("@hourly", move |_, _| {
+                println!("{} {}", color, brightness);
+            })
+            .unwrap(),
+        )
+        .await;
+    let _ = sched.start().await;
+    Ok(())
+}
+
+#[tauri::command]
 fn message() {
     let mut stream = std::net::TcpStream::connect("127.0.0.1:4444").unwrap();
     std::io::Write::write_all(
@@ -74,6 +91,7 @@ fn main() {
         })
         .invoke_handler(tauri::generate_handler![
             message,
+            cron,
             redshift,
             inc_brightness,
             dec_brightness
