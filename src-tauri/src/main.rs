@@ -1,10 +1,19 @@
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
-use tauri::{CustomMenuItem, Manager, SystemTrayEvent, SystemTrayMenuItem};
+use tauri::{CustomMenuItem, Manager, State, SystemTrayEvent, SystemTrayMenuItem};
+
+struct Redshit {
+    brightness: std::sync::Mutex<String>,
+    color: std::sync::Mutex<String>,
+}
 
 #[tauri::command]
-fn redshift(color: &str, brightness: &str) {
+fn redshift(color: &str, brightness: &str, state: State<Redshit>) {
+    let mut state_lock = state.brightness.lock().unwrap();
+    *state_lock = brightness.to_string();
+    let mut state_lock = state.color.lock().unwrap();
+    *state_lock = color.to_string();
     std::process::Command::new("redshift")
         .args(["-P", "-O", color, "-b", brightness])
         .spawn()
@@ -59,6 +68,10 @@ fn main() {
         .add_item(quit);
     let system_tray = tauri::SystemTray::new().with_menu(tray_menu);
     tauri::Builder::default()
+        .manage(Redshit {
+            brightness: "1".to_string().into(),
+            color: "6500".to_string().into(),
+        })
         .invoke_handler(tauri::generate_handler![
             message,
             redshift,
