@@ -8,20 +8,17 @@ import { sendNotification } from "@tauri-apps/api/notification";
 import { createSignal, onMount } from "solid-js";
 
 function App() {
-  const [brightness, setBrightness] = createSignal(1);
-  const updateBrightness = (value: string) => {
+  const [brightness, setBrightness] = createSignal(100);
+  const updateBrightness = (value: number) => {
     invoke("redshift", {
       color: "5900",
-      brightness: value,
+      brightness: `${value / 100}`,
     }).catch(console.error);
-    invoke("message").catch(console.error);
   };
   const createHotkey = (hotkey: string, action: () => void) => {
     isRegistered(hotkey)
       .then((reg) => {
-        if (reg) {
-          unregister(hotkey)!;
-        }
+        if (reg) unregister(hotkey)!;
       })
       .catch(console.error)
       .finally(() => {
@@ -29,41 +26,49 @@ function App() {
           action();
           sendNotification({
             title: "Rest",
-            body: `Brightness set to ${Math.trunc(brightness() * 100)}%`,
+            body: `Brightness set to ${brightness()}%`,
           });
         })!;
       });
   };
   onMount(() => {
     createHotkey("Alt+PageUp", () => {
-      invoke("inc_brightness").catch(console.error);
+      if (brightness() === 100) {
+        return;
+      }
+      setBrightness(brightness() + 5);
+      updateBrightness(brightness());
     });
     createHotkey("Alt+PageDown", () => {
-      invoke("dec_brightness").catch(console.error);
+      if (brightness() === 10) {
+        return;
+      }
+      setBrightness(brightness() - 5);
+      updateBrightness(brightness());
     });
   });
   return (
     <div>
       <input
         type="number"
-        min="0"
-        max="1"
-        step="0.01"
+        min="10"
+        max="100"
+        step="5"
         value={brightness()}
         onChange={(e) => {
           setBrightness(Number(e.currentTarget.value));
-          updateBrightness(e.currentTarget.value);
+          updateBrightness(Number(e.currentTarget.value));
         }}
       />
       <input
         type="range"
-        min="0"
-        max="1"
-        step="0.01"
+        min="10"
+        max="100"
+        step="5"
         value={brightness()}
         onInput={(e) => {
           setBrightness(Number(e.currentTarget.value));
-          updateBrightness(e.currentTarget.value);
+          updateBrightness(Number(e.currentTarget.value));
         }}
       />
     </div>
