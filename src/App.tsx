@@ -14,6 +14,7 @@ function App() {
       color: "5900",
       brightness: value,
     }).catch(console.error);
+    invoke("message").catch(console.error);
   };
   const createHotkey = (hotkey: string, action: () => void) => {
     isRegistered(hotkey)
@@ -35,14 +36,10 @@ function App() {
   };
   onMount(() => {
     createHotkey("Alt+PageUp", () => {
-      setBrightness(brightness() + 0.05);
-      updateBrightness(brightness().toString());
-      console.log(brightness());
+      invoke("inc_brightness").catch(console.error);
     });
     createHotkey("Alt+PageDown", () => {
-      setBrightness(brightness() - 0.05);
-      updateBrightness(brightness().toString());
-      console.log(brightness());
+      invoke("dec_brightness").catch(console.error);
     });
   });
   return (

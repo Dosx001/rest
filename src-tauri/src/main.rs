@@ -11,6 +11,40 @@ fn redshift(color: &str, brightness: &str) {
         .expect("failed to execute process");
 }
 
+#[tauri::command]
+fn message() {
+    let mut stream = std::net::TcpStream::connect("127.0.0.1:4444").unwrap();
+    std::io::Write::write_all(
+        &mut stream,
+        r#"{'message_type': 'Text', 'content': {'Text': 'Hello from the client!'}}"#.as_bytes(),
+    )
+    .expect("failed to write to stream");
+    let mut buffer = [0; 512];
+    let x = std::io::Read::read(&mut stream, &mut buffer).unwrap();
+    let data = std::str::from_utf8(&buffer[0..x]).unwrap();
+    println!("{:?}", data);
+}
+
+#[tauri::command]
+fn inc_brightness() {
+    let mut stream = std::net::TcpStream::connect("127.0.0.1:4444").unwrap();
+    std::io::Write::write_all(
+        &mut stream,
+        r#"{'message_type': 'BrightnessUp'}"#.as_bytes(),
+    )
+    .expect("failed to write to stream");
+}
+
+#[tauri::command]
+fn dec_brightness() {
+    let mut stream = std::net::TcpStream::connect("127.0.0.1:4444").unwrap();
+    std::io::Write::write_all(
+        &mut stream,
+        r#"{'message_type': 'BrightnessDown'}"#.as_bytes(),
+    )
+    .expect("failed to write to stream");
+}
+
 fn main() {
     let mut hide = CustomMenuItem::new("hide".to_string(), "Hide");
     hide = hide.accelerator("h".to_string());
@@ -25,7 +59,12 @@ fn main() {
         .add_item(quit);
     let system_tray = tauri::SystemTray::new().with_menu(tray_menu);
     tauri::Builder::default()
-        .invoke_handler(tauri::generate_handler![redshift])
+        .invoke_handler(tauri::generate_handler![
+            message,
+            redshift,
+            inc_brightness,
+            dec_brightness
+        ])
         .system_tray(system_tray)
         .on_system_tray_event(|app, event| {
             if let SystemTrayEvent::MenuItemClick { id, .. } = event {
