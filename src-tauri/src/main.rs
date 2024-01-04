@@ -17,7 +17,9 @@ fn redshift(color: &str, brightness: &str, state: State<Redshit>) {
     std::process::Command::new("redshift")
         .args(["-P", "-O", color, "-b", brightness])
         .spawn()
-        .expect("failed to execute process");
+        .expect("failed to execute process")
+        .wait()
+        .unwrap();
 }
 
 #[tauri::command]
