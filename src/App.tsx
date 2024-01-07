@@ -10,7 +10,7 @@ import { createSignal } from "solid-js";
 
 function App() {
   const [brightness, setBrightness] = createSignal(100);
-  const updateBrightness = (value: number) => {
+  const updateRedshift = (value: number) => {
     invoke("redshift", {
       color: "5900",
       brightness: `${value / 100}`,
@@ -45,12 +45,12 @@ function App() {
   createHotkey("Alt+PageUp", () => {
     if (brightness() === 100) return;
     setBrightness(brightness() + 5);
-    updateBrightness(brightness());
+    updateRedshift(brightness());
   });
   createHotkey("Alt+PageDown", () => {
     if (brightness() === 10) return;
     setBrightness(brightness() - 5);
-    updateBrightness(brightness());
+    updateRedshift(brightness());
   });
   return (
     <div>
@@ -62,7 +62,7 @@ function App() {
         value={brightness()}
         onChange={(e) => {
           setBrightness(Number(e.currentTarget.value));
-          updateBrightness(Number(e.currentTarget.value));
+          updateRedshift(Number(e.currentTarget.value));
         }}
       />
       <input
@@ -73,7 +73,7 @@ function App() {
         value={brightness()}
         onInput={(e) => {
           setBrightness(Number(e.currentTarget.value));
-          updateBrightness(Number(e.currentTarget.value));
+          updateRedshift(Number(e.currentTarget.value));
         }}
       />
     </div>
