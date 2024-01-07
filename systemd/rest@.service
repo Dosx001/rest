@@ -1,9 +1,0 @@
-[Unit]
-Description=rest server
-
-[Service]
-ExecStart=/home/dosx/repos/gui/rest/src-tauri/target/debug/server
-StandardInput=socket
-
-[Install]
-WantedBy=multi-user.target

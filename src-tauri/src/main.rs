@@ -1,76 +1,16 @@
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
-use tauri::{CustomMenuItem, Manager, State, SystemTrayEvent, SystemTrayMenuItem};
-
-struct Redshit {
-    brightness: std::sync::Mutex<String>,
-    color: std::sync::Mutex<String>,
-}
+use tauri::{CustomMenuItem, Manager, SystemTrayEvent, SystemTrayMenuItem};
 
 #[tauri::command]
-fn redshift(color: &str, brightness: &str, state: State<Redshit>) {
-    let mut state_lock = state.brightness.lock().unwrap();
-    *state_lock = brightness.to_string();
-    let mut state_lock = state.color.lock().unwrap();
-    *state_lock = color.to_string();
+fn redshift(color: &str, brightness: &str) {
     std::process::Command::new("redshift")
         .args(["-P", "-O", color, "-b", brightness])
         .spawn()
         .expect("failed to execute process")
         .wait()
         .unwrap();
-}
-
-#[tauri::command]
-async fn cron(state: State<'_, Redshit>) -> Result<(), ()> {
-    let color = state.color.lock().unwrap().clone();
-    let brightness = state.brightness.lock().unwrap().clone();
-    let sched = tokio_cron_scheduler::JobScheduler::new().await.unwrap();
-    let _ = sched
-        .add(
-            tokio_cron_scheduler::Job::new("@hourly", move |_, _| {
-                println!("{} {}", color, brightness);
-            })
-            .unwrap(),
-        )
-        .await;
-    let _ = sched.start().await;
-    Ok(())
-}
-
-#[tauri::command]
-fn message() {
-    let mut stream = std::net::TcpStream::connect("127.0.0.1:4444").unwrap();
-    std::io::Write::write_all(
-        &mut stream,
-        r#"{'message_type': 'Text', 'content': {'Text': 'Hello from the client!'}}"#.as_bytes(),
-    )
-    .expect("failed to write to stream");
-    let mut buffer = [0; 512];
-    let x = std::io::Read::read(&mut stream, &mut buffer).unwrap();
-    let data = std::str::from_utf8(&buffer[0..x]).unwrap();
-    println!("{:?}", data);
-}
-
-#[tauri::command]
-fn inc_brightness() {
-    let mut stream = std::net::TcpStream::connect("127.0.0.1:4444").unwrap();
-    std::io::Write::write_all(
-        &mut stream,
-        r#"{'message_type': 'BrightnessUp'}"#.as_bytes(),
-    )
-    .expect("failed to write to stream");
-}
-
-#[tauri::command]
-fn dec_brightness() {
-    let mut stream = std::net::TcpStream::connect("127.0.0.1:4444").unwrap();
-    std::io::Write::write_all(
-        &mut stream,
-        r#"{'message_type': 'BrightnessDown'}"#.as_bytes(),
-    )
-    .expect("failed to write to stream");
 }
 
 async fn cron_jobs(window: tauri::Window) {
@@ -115,17 +55,7 @@ async fn main() {
             tokio::spawn(cron_jobs(window));
             Ok(())
         })
-        .manage(Redshit {
-            brightness: "1".to_string().into(),
-            color: "6500".to_string().into(),
-        })
-        .invoke_handler(tauri::generate_handler![
-            message,
-            cron,
-            redshift,
-            inc_brightness,
-            dec_brightness
-        ])
+        .invoke_handler(tauri::generate_handler![redshift,])
         .system_tray(system_tray)
         .on_system_tray_event(|app, event| {
             if let SystemTrayEvent::MenuItemClick { id, .. } = event {

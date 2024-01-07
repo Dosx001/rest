@@ -7,14 +7,6 @@ license = ""
 repository = ""
 edition = "2021"
 
-[[bin]]
-name = "rest"
-path = "src/main.rs"
-
-[[bin]]
-name = "server"
-path = "src/server/main.rs"
-
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [build-dependencies]
