@@ -17,6 +17,7 @@ function App() {
       brightness: `${brightness() / 100}`,
     }).catch(console.error);
   };
+  // eslint-disable-next-line solid/reactivity
   listen("cron", (ev) => {
     switch (ev.payload) {
       case "reset":
@@ -33,6 +34,7 @@ function App() {
     isRegistered(hotkey)
       .then(async (reg) => {
         if (reg) await unregister(hotkey)!;
+        // eslint-disable-next-line solid/reactivity
         register(hotkey, () => {
           action();
           sendNotification({
