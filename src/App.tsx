@@ -9,10 +9,11 @@ import { sendNotification } from "@tauri-apps/api/notification";
 import { createSignal } from "solid-js";
 
 function App() {
+  const [color, setColor] = createSignal(5900);
   const [brightness, setBrightness] = createSignal(100);
   const updateRedshift = () => {
     invoke("redshift", {
-      color: "5900",
+      color: color().toString(),
       brightness: `${brightness() / 100}`,
     }).catch(console.error);
   };
@@ -20,36 +21,48 @@ function App() {
     switch (ev.payload) {
       case "reset":
         setBrightness(100);
+        setColor(5900);
+        updateRedshift();
         break;
       case "update":
-        console.log("update");
+        console.log(new Date());
         break;
     }
   })!;
-  const createHotkey = (hotkey: string, action: () => void) => {
+  const createHotkey = (hotkey: string, type: boolean, action: () => void) => {
     isRegistered(hotkey)
-      .then((reg) => {
-        if (reg) unregister(hotkey)!;
-      })
-      .catch(console.error)
-      .finally(() => {
+      .then(async (reg) => {
+        if (reg) await unregister(hotkey)!;
         register(hotkey, () => {
           action();
           sendNotification({
             title: "Rest",
-            body: `Brightness set to ${brightness()}%`,
+            body: type
+              ? `Color set to ${color()}`
+              : `Brightness set to ${brightness()}%`,
           });
         })!;
-      });
+      })
+      .catch(console.error);
   };
-  createHotkey("Alt+PageUp", () => {
+  createHotkey("Alt+PageUp", false, () => {
     if (brightness() === 100) return;
     setBrightness(brightness() + 5);
     updateRedshift();
   });
-  createHotkey("Alt+PageDown", () => {
+  createHotkey("Alt+PageDown", false, () => {
     if (brightness() === 10) return;
     setBrightness(brightness() - 5);
+    updateRedshift();
+  });
+  createHotkey("Alt+Home", true, () => {
+    if (color() === 25000) return;
+    setColor(color() + 100);
+    updateRedshift();
+  });
+  createHotkey("Alt+End", true, () => {
+    if (color() === 1000) return;
+    setColor(color() - 100);
     updateRedshift();
   });
   return (
