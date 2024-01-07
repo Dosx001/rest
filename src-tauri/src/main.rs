@@ -73,7 +73,30 @@ fn dec_brightness() {
     .expect("failed to write to stream");
 }
 
-fn main() {
+async fn cron_jobs(window: tauri::Window) {
+    let sched = tokio_cron_scheduler::JobScheduler::new().await.unwrap();
+    let winc = window.clone();
+    let _ = sched
+        .add(
+            tokio_cron_scheduler::Job::new("@daily", move |_, _| {
+                let _ = winc.emit("cron", "reset");
+            })
+            .unwrap(),
+        )
+        .await;
+    let _ = sched
+        .add(
+            tokio_cron_scheduler::Job::new("@hourly", move |_, _| {
+                let _ = window.clone().emit("cron", "update");
+            })
+            .unwrap(),
+        )
+        .await;
+    let _ = sched.start().await;
+}
+
+#[tokio::main]
+async fn main() {
     let mut hide = CustomMenuItem::new("hide".to_string(), "Hide");
     hide = hide.accelerator("h".to_string());
     let mut show = CustomMenuItem::new("show".to_string(), "Show");
@@ -87,6 +110,11 @@ fn main() {
         .add_item(quit);
     let system_tray = tauri::SystemTray::new().with_menu(tray_menu);
     tauri::Builder::default()
+        .setup(move |app| {
+            let window = app.get_window("main").unwrap();
+            tokio::spawn(cron_jobs(window));
+            Ok(())
+        })
         .manage(Redshit {
             brightness: "1".to_string().into(),
             color: "6500".to_string().into(),

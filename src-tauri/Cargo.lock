@@ -2712,6 +2712,7 @@ dependencies = [
  "serde_json",
  "tauri",
  "tauri-build",
+ "tokio",
  "tokio-cron-scheduler",
 ]
 
@@ -3557,6 +3558,7 @@ dependencies = [
  "bytes",
  "num_cpus",
  "pin-project-lite",
+ "tokio-macros",
 ]
 
 [[package]]
@@ -3572,6 +3574,17 @@ dependencies = [
  "tokio",
  "tracing",
  "uuid",
+]
+
+[[package]]
+name = "tokio-macros"
+version = "2.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5b8a1e28f2deaa14e508979454cb3a223b10b938b45af148bc0986de36f1923b"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 2.0.43",
 ]
 
 [[package]]

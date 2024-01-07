@@ -1,4 +1,5 @@
 import { invoke } from "@tauri-apps/api";
+import { listen } from "@tauri-apps/api/event";
 import {
   isRegistered,
   register,
@@ -15,6 +16,16 @@ function App() {
       brightness: `${value / 100}`,
     }).catch(console.error);
   };
+  listen("cron", (ev) => {
+    switch (ev.payload) {
+      case "reset":
+        setBrightness(100);
+        break;
+      case "update":
+        console.log("update");
+        break;
+    }
+  })!;
   const createHotkey = (hotkey: string, action: () => void) => {
     isRegistered(hotkey)
       .then((reg) => {
@@ -32,7 +43,6 @@ function App() {
       });
   };
   onMount(() => {
-    invoke("cron").catch(console.error);
     createHotkey("Alt+PageUp", () => {
       if (brightness() === 100) {
         return;
