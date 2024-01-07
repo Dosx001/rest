@@ -6,7 +6,7 @@ import {
   unregister,
 } from "@tauri-apps/api/globalShortcut";
 import { sendNotification } from "@tauri-apps/api/notification";
-import { createSignal, onMount } from "solid-js";
+import { createSignal } from "solid-js";
 
 function App() {
   const [brightness, setBrightness] = createSignal(100);
@@ -42,21 +42,15 @@ function App() {
         })!;
       });
   };
-  onMount(() => {
-    createHotkey("Alt+PageUp", () => {
-      if (brightness() === 100) {
-        return;
-      }
-      setBrightness(brightness() + 5);
-      updateBrightness(brightness());
-    });
-    createHotkey("Alt+PageDown", () => {
-      if (brightness() === 10) {
-        return;
-      }
-      setBrightness(brightness() - 5);
-      updateBrightness(brightness());
-    });
+  createHotkey("Alt+PageUp", () => {
+    if (brightness() === 100) return;
+    setBrightness(brightness() + 5);
+    updateBrightness(brightness());
+  });
+  createHotkey("Alt+PageDown", () => {
+    if (brightness() === 10) return;
+    setBrightness(brightness() - 5);
+    updateBrightness(brightness());
   });
   return (
     <div>
