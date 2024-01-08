@@ -6,7 +6,7 @@ import {
   unregister,
 } from "@tauri-apps/api/globalShortcut";
 import { sendNotification } from "@tauri-apps/api/notification";
-import { createSignal } from "solid-js";
+import { createSignal, onCleanup } from "solid-js";
 
 function App() {
   const [color, setColor] = createSignal(5900);
@@ -18,7 +18,7 @@ function App() {
     }).catch(console.error);
   };
   // eslint-disable-next-line solid/reactivity
-  listen("cron", (ev) => {
+  const unlisten = listen("cron", (ev) => {
     switch (ev.payload) {
       case "reset":
         setBrightness(100);
@@ -66,6 +66,9 @@ function App() {
     if (color() === 1000) return;
     setColor(color() - 100);
     updateRedshift();
+  });
+  onCleanup(() => {
+    unlisten.then((unlisten) => unlisten())!;
   });
   return (
     <div>
