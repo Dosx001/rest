@@ -162,6 +162,7 @@ function App() {
               max="25000"
               step="100"
               value={color()}
+              title={`${color()}`}
               onChange={(e) => {
                 setColors(colors().toSpliced(i, 1, Number(e.target.value)));
               }}
