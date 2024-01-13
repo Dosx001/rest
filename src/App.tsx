@@ -7,7 +7,7 @@ import {
   unregister,
 } from "@tauri-apps/api/globalShortcut";
 import { sendNotification } from "@tauri-apps/api/notification";
-import { createEffect, createSignal, onCleanup } from "solid-js";
+import { Index, createSignal, onCleanup, onMount } from "solid-js";
 
 function App() {
   let div!: HTMLDivElement;
@@ -26,6 +26,7 @@ function App() {
   const unlisten = listen("cron", (ev) => {
     switch (ev.payload) {
       case "reset":
+        console.log("reset", new Date());
         setBrightness(100);
         setColor(5900);
         updateRedshift();
@@ -72,10 +73,10 @@ function App() {
     setColor(color() - 100);
     updateRedshift();
   });
-  createEffect(() => {
-    const width = 700;
-    const height = 600;
-    const margin = { top: 20, right: 20, bottom: 25, left: 30 };
+  onMount(() => {
+    const width = 1000;
+    const height = 728;
+    const margin = { top: 25, right: 20, bottom: 30, left: 40 };
     const svg = d3
       .select(div)
       .append("svg")
@@ -83,24 +84,27 @@ function App() {
       .attr("height", height);
     const xScale = d3
       .scaleLinear()
-      .domain([0, 24])
+      .domain([1000, 25000])
       .range([margin.left, width - margin.right]);
     const yScale = d3
       .scaleLinear()
-      .domain([1000, 25000])
+      .domain([0, 24])
       .range([height - margin.bottom, margin.top]);
-    const line = d3
-      .line()
-      .x((_, i) => xScale(i))
-      .y((d) => yScale(d));
     svg
       .append("g")
       .attr("transform", `translate(${margin.left}, 0)`)
       .call(
         d3
           .axisLeft(yScale)
-          .ticks(18)
-          .tickFormat((d) => `${d / 1000}k`),
+          .ticks(25)
+          .tickSize(12)
+          .tickFormat((d) => {
+            const n = Number(d);
+            if (n < 12) return `${Math.abs(n - 12)}pm`;
+            if (n === 12) return "12pm";
+            if (n === 24) return "12am";
+            return `${Math.abs(n - 24)}am`;
+          }),
       )
       .selectAll("line")
       .attr("stroke", "lightgray")
@@ -111,20 +115,16 @@ function App() {
       .call(
         d3
           .axisBottom(xScale)
-          .ticks(12)
-          .tickFormat((d) => {
-            if (d === 0) return "12am";
-            if (d < 12) return `${Number(d)}am`;
-            if (d === 12) return "12pm";
-            return `${d - 12}pm`;
-          }),
+          .ticks(18)
+          .tickSize(12)
+          .tickFormat((d) => `${Number(d) / 1000}k`),
       )
       .selectAll("line")
       .attr("stroke", "lightgray")
       .attr("stroke-opacity", 0.7);
     svg
       .selectAll(".hline")
-      .data(d3.range(1000, 26000, 1000))
+      .data(d3.range(1, 25, 1))
       .enter()
       .append("line")
       .attr("class", "hline")
@@ -136,7 +136,7 @@ function App() {
       .attr("stroke-opacity", 0.7);
     svg
       .selectAll(".vline")
-      .data(d3.range(1, 25, 1))
+      .data(d3.range(1000, 25500, 500))
       .enter()
       .append("line")
       .attr("class", "vline")
@@ -146,49 +146,31 @@ function App() {
       .attr("y2", height - margin.bottom)
       .attr("stroke", "lightgray")
       .attr("stroke-opacity", 0.7);
-    svg
-      .append("g")
-      .attr("class", "data-group")
-      // eslint-disable-next-line solid/reactivity
-      .call((group) => {
-        group
-          .append("path")
-          .datum(colors())
-          .attr("fill", "none")
-          .attr("stroke", "dodgerblue")
-          .attr("stroke-width", 2)
-          .attr("d", line);
-      });
   });
   onCleanup(() => {
     unlisten.then((unlisten) => unlisten())!;
   });
   return (
     <div>
-      <input
-        type="number"
-        min="10"
-        max="100"
-        step="5"
-        value={brightness()}
-        onChange={(e) => {
-          setBrightness(Number(e.currentTarget.value));
-          updateRedshift();
-        }}
-      />
-      <input
-        type="range"
-        min="10"
-        max="100"
-        step="5"
-        value={brightness()}
-        onInput={(e) => {
-          setBrightness(Number(e.currentTarget.value));
-          updateRedshift();
-        }}
-      />
+      <div class="absolute ml-[43px] mt-4 w-[970px]">
+        <Index each={colors()}>
+          {(color, i) => (
+            <input
+              type="range"
+              class="w-full"
+              min="1000"
+              max="25000"
+              step="100"
+              value={color()}
+              onChange={(e) => {
+                setColors(colors().toSpliced(i, 1, Number(e.target.value)));
+              }}
+            />
+          )}
+        </Index>
+      </div>
       <div
-        class="ml-10 w-fit rounded bg-gray-600 shadow shadow-black"
+        class="m-4 w-fit rounded border border-black bg-gray-600 px-1 text-white shadow shadow-black"
         ref={div}
       />
     </div>
