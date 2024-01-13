@@ -12,25 +12,25 @@
   },
   "license": "MIT",
   "dependencies": {
-    "@tauri-apps/api": "^1.5.2",
+    "@tauri-apps/api": "^1.5.3",
     "d3": "^7.8.5",
-    "solid-js": "^1.7.8"
+    "solid-js": "^1.8.10"
   },
   "devDependencies": {
-    "@tauri-apps/cli": "^1.5.8",
+    "@tauri-apps/cli": "^1.5.9",
     "@types/d3": "^7.4.3",
-    "@typescript-eslint/eslint-plugin": "^6.16.0",
-    "@typescript-eslint/parser": "^6.16.0",
+    "@typescript-eslint/eslint-plugin": "^6.18.1",
+    "@typescript-eslint/parser": "^6.18.1",
     "eslint": "^8.56.0",
-    "eslint-plugin-solid": "^0.13.0",
-    "postcss": "^8.4.32",
+    "eslint-plugin-solid": "^0.13.1",
+    "postcss": "^8.4.33",
     "prettier": "^3.1.1",
-    "prettier-plugin-tailwindcss": "^0.5.9",
-    "sass": "^1.69.5",
-    "tailwindcss": "^3.4.0",
-    "typescript": "^5.0.2",
-    "vite": "^5.0.0",
+    "prettier-plugin-tailwindcss": "^0.5.11",
+    "sass": "^1.69.7",
+    "tailwindcss": "^3.4.1",
+    "typescript": "^5.3.3",
+    "vite": "^5.0.11",
     "vite-plugin-solid": "^2.8.0",
-    "vite-tsconfig-paths": "^4.2.2"
+    "vite-tsconfig-paths": "^4.2.3"
   }
 }
