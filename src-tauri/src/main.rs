@@ -18,7 +18,7 @@ async fn cron_jobs(window: tauri::Window) {
     let winc = window.clone();
     let _ = sched
         .add(
-            tokio_cron_scheduler::Job::new("@daily", move |_, _| {
+            tokio_cron_scheduler::Job::new("0 0 5 * * *", move |_, _| {
                 let _ = winc.emit("cron", "reset");
             })
             .unwrap(),

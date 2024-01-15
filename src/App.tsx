@@ -26,13 +26,11 @@ function App() {
   const unlisten = listen("cron", (ev) => {
     switch (ev.payload) {
       case "reset":
-        console.log("reset", new Date());
         setBrightness(100);
         setColor(5900);
         updateRedshift();
         break;
       case "update":
-        console.log(new Date());
         break;
     }
   })!;
