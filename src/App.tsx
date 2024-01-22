@@ -12,7 +12,7 @@ import { Index, createSignal, onCleanup, onMount } from "solid-js";
 function App() {
   let div!: HTMLDivElement;
   const [colors, setColors] = createSignal(
-    Array.from({ length: 25 }, (_, i) => (i + 1) * 1000),
+    Array.from({ length: 24 }, (_, i) => (i + 1) * 1000),
   );
   const [color, setColor] = createSignal(5900);
   const [brightness, setBrightness] = createSignal(100);
@@ -73,7 +73,7 @@ function App() {
   });
   onMount(() => {
     const width = 1000;
-    const height = 728;
+    const height = 700;
     const margin = { top: 25, right: 20, bottom: 30, left: 40 };
     const svg = d3
       .select(div)
@@ -86,7 +86,7 @@ function App() {
       .range([margin.left, width - margin.right]);
     const yScale = d3
       .scaleLinear()
-      .domain([0, 24])
+      .domain([0, 23])
       .range([height - margin.bottom, margin.top]);
     svg
       .append("g")
@@ -98,10 +98,10 @@ function App() {
           .tickSize(12)
           .tickFormat((d) => {
             const n = Number(d);
-            if (n < 12) return `${Math.abs(n - 12)}pm`;
-            if (n === 12) return "12pm";
-            if (n === 24) return "12am";
-            return `${Math.abs(n - 24)}am`;
+            if (n === 23) return "12am";
+            if (n === 11) return "12pm";
+            if (n < 11) return `${Math.abs(n - 11)}pm`;
+            return `${Math.abs(n - 23)}am`;
           }),
       )
       .selectAll("line")
