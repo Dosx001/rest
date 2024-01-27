@@ -17,10 +17,10 @@ function App() {
   const [color, setColor] = createSignal(5900);
   const [brightness, setBrightness] = createSignal(100);
   const updateRedshift = () => {
-    invoke("redshift", {
+    void invoke("redshift", {
       color: color().toString(),
       brightness: `${brightness() / 100}`,
-    }).catch(console.error);
+    });
   };
   // eslint-disable-next-line solid/reactivity
   const unlisten = listen("cron", (ev) => {
@@ -33,23 +33,21 @@ function App() {
       case "update":
         break;
     }
-  })!;
+  });
   const createHotkey = (hotkey: string, type: boolean, action: () => void) => {
-    isRegistered(hotkey)
-      .then(async (reg) => {
-        if (reg) await unregister(hotkey)!;
-        // eslint-disable-next-line solid/reactivity
-        register(hotkey, () => {
-          action();
-          sendNotification({
-            title: "Rest",
-            body: type
-              ? `Color set to ${color()}`
-              : `Brightness set to ${brightness()}%`,
-          });
-        })!;
-      })
-      .catch(console.error);
+    isRegistered(hotkey).then(async (reg) => {
+      if (reg) await unregister(hotkey);
+      // eslint-disable-next-line solid/reactivity
+      register(hotkey, () => {
+        action();
+        sendNotification({
+          title: "Rest",
+          body: type
+            ? `Color set to ${color()}`
+            : `Brightness set to ${brightness()}%`,
+        });
+      }).catch(console.error);
+    }, console.error);
   };
   createHotkey("Alt+PageUp", false, () => {
     if (brightness() === 100) return;
@@ -146,7 +144,7 @@ function App() {
       .attr("stroke-opacity", 0.7);
   });
   onCleanup(() => {
-    unlisten.then((unlisten) => unlisten())!;
+    void unlisten.then((unlisten) => unlisten && unlisten());
   });
   return (
     <div>
