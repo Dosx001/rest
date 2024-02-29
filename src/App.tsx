@@ -12,7 +12,7 @@ import { Index, createSignal, onCleanup, onMount } from "solid-js";
 function App() {
   let div!: HTMLDivElement;
   const [colors, setColors] = createSignal(
-    Array.from({ length: 24 }, (_, i) => (i + 1) * 1000),
+    Array.from({ length: 24 }, () => 5900),
   );
   const [color, setColor] = createSignal(5900);
   const [brightness, setBrightness] = createSignal(100);
