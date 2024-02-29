@@ -59,12 +59,12 @@ function App() {
     setBrightness(brightness() - 5);
     updateRedshift();
   });
-  createHotkey("Alt+Home", true, () => {
+  createHotkey("Alt+Insert", true, () => {
     if (color() === 25000) return;
     setColor(color() + 100);
     updateRedshift();
   });
-  createHotkey("Alt+End", true, () => {
+  createHotkey("Alt+Delete", true, () => {
     if (color() === 1000) return;
     setColor(color() - 100);
     updateRedshift();
