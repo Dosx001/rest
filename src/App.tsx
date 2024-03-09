@@ -12,9 +12,9 @@ import { Index, createSignal, onCleanup, onMount } from "solid-js";
 function App() {
   let div!: HTMLDivElement;
   const [colors, setColors] = createSignal(
-    Array.from({ length: 24 }, () => 5900),
+    Array.from({ length: 24 }, () => 6400),
   );
-  const [color, setColor] = createSignal(5900);
+  const [color, setColor] = createSignal(6400);
   const [brightness, setBrightness] = createSignal(100);
   const updateRedshift = () => {
     void invoke("redshift", {
