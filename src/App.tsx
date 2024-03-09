@@ -147,7 +147,7 @@ function App() {
     void unlisten.then((unlisten) => unlisten && unlisten());
   });
   return (
-    <div>
+    <div class="m-auto w-fit">
       <div class="absolute ml-[43px] mt-4 w-[970px]">
         <Index each={colors()}>
           {(color, i) => (
