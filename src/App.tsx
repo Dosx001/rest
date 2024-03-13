@@ -18,7 +18,7 @@ function App() {
   const [brightness, setBrightness] = createSignal(100);
   const updateRedshift = () => {
     void invoke("redshift", {
-      color: color().toString(),
+      color: colors()[new Date().getHours()].toString(),
       brightness: `${brightness() / 100}`,
     });
   };
@@ -31,6 +31,9 @@ function App() {
         updateRedshift();
         break;
       case "update":
+        updateRedshift();
+        sendNotification(`Color: ${colors()[new Date().getHours()]}`);
+        setColor(colors()[new Date().getHours()]);
         break;
     }
   });
@@ -63,11 +66,13 @@ function App() {
     if (color() === 25000) return;
     setColor(color() + 100);
     updateRedshift();
+    setColors(colors().toSpliced(new Date().getHours(), 1, color()));
   });
   createHotkey("Alt+Delete", true, () => {
     if (color() === 1000) return;
     setColor(color() - 100);
     updateRedshift();
+    setColors(colors().toSpliced(new Date().getHours(), 1, color()));
   });
   onMount(() => {
     const width = 1000;
@@ -161,6 +166,7 @@ function App() {
               title={`${color()}`}
               onChange={(e) => {
                 setColors(colors().toSpliced(i, 1, Number(e.target.value)));
+                updateRedshift();
               }}
             />
           )}
