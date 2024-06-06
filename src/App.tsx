@@ -14,7 +14,13 @@ import {
 } from "@tauri-apps/api/globalShortcut";
 import { sendNotification } from "@tauri-apps/api/notification";
 import * as d3 from "d3";
-import { Index, createSignal, onCleanup, onMount } from "solid-js";
+import {
+  Index,
+  createEffect,
+  createSignal,
+  onCleanup,
+  onMount,
+} from "solid-js";
 
 function App() {
   let div!: HTMLDivElement;
@@ -23,22 +29,14 @@ function App() {
   );
   const [color, setColor] = createSignal(6400);
   const [brightness, setBrightness] = createSignal(100);
-  const updateRedshift = () => {
-    void invoke("redshift", {
-      color: colors()[new Date().getHours()].toString(),
-      brightness: `${brightness() / 100}`,
-    });
-  };
   // eslint-disable-next-line solid/reactivity
   const unlisten = listen("cron", (ev) => {
     switch (ev.payload) {
       case "reset":
         setBrightness(100);
         setColor(5900);
-        updateRedshift();
         break;
       case "update":
-        updateRedshift();
         sendNotification(`Color: ${colors()[new Date().getHours()]}`);
         setColor(colors()[new Date().getHours()]);
         break;
@@ -71,30 +69,32 @@ function App() {
   createHotkey("Alt+PageUp", false, () => {
     if (brightness() === 100) return;
     setBrightness(brightness() + 5);
-    updateRedshift();
   });
   createHotkey("Alt+PageDown", false, () => {
     if (brightness() === 10) return;
     setBrightness(brightness() - 5);
-    updateRedshift();
   });
   createHotkey("Alt+Insert", true, () => {
     if (color() === 25000) return;
     setColor(color() + 100);
-    updateRedshift();
     setColors(colors().toSpliced(new Date().getHours(), 1, color()));
     saveSettings();
   });
   createHotkey("Alt+Delete", true, () => {
     if (color() === 1000) return;
     setColor(color() - 100);
-    updateRedshift();
     setColors(colors().toSpliced(new Date().getHours(), 1, color()));
     saveSettings();
   });
+  createEffect(() => {
+    void invoke("redshift", {
+      color: colors()[new Date().getHours()].toString(),
+      brightness: `${brightness() / 100}`,
+    });
+  });
   onMount(() => {
-    void exists("rest/settings.json", { dir: BaseDirectory.Config })
-      .then((res) => {
+    void exists("rest/settings.json", { dir: BaseDirectory.Config }).then(
+      (res) => {
         res
           ? void readTextFile("rest/settings.json", {
               dir: BaseDirectory.Config,
@@ -106,8 +106,8 @@ function App() {
               dir: BaseDirectory.Config,
               recursive: true,
             });
-      })
-      .then(updateRedshift);
+      },
+    );
     const width = 1000;
     const height = 700;
     const margin = { top: 25, right: 20, bottom: 30, left: 40 };
@@ -199,7 +199,6 @@ function App() {
               title={`${color()}`}
               onChange={(e) => {
                 setColors(colors().toSpliced(i, 1, Number(e.target.value)));
-                updateRedshift();
                 saveSettings();
               }}
             />
