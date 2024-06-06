@@ -44,7 +44,7 @@ function App() {
         break;
     }
   });
-  const createHotkey = (hotkey: string, type: boolean, action: () => void) => {
+  function createHotkey(hotkey: string, type: boolean, action: () => void) {
     isRegistered(hotkey).then(async (reg) => {
       if (reg) await unregister(hotkey);
       // eslint-disable-next-line solid/reactivity
@@ -58,7 +58,7 @@ function App() {
         });
       }).catch(console.error);
     }, console.error);
-  };
+  }
   function saveSettings() {
     void writeTextFile(
       "rest/settings.json",
