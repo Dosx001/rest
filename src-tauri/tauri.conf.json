@@ -12,6 +12,13 @@
   "tauri": {
     "allowlist": {
       "all": false,
+      "fs": {
+        "scope": ["$CONFIG/rest", "$CONFIG/rest/*"],
+        "readFile": true,
+        "writeFile": true,
+        "createDir": true,
+        "exists": true
+      },
       "globalShortcut": {
         "all": true
       },

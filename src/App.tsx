@@ -1,12 +1,19 @@
-import * as d3 from "d3";
 import { invoke } from "@tauri-apps/api";
 import { listen } from "@tauri-apps/api/event";
+import {
+  BaseDirectory,
+  createDir,
+  exists,
+  readTextFile,
+  writeTextFile,
+} from "@tauri-apps/api/fs";
 import {
   isRegistered,
   register,
   unregister,
 } from "@tauri-apps/api/globalShortcut";
 import { sendNotification } from "@tauri-apps/api/notification";
+import * as d3 from "d3";
 import { Index, createSignal, onCleanup, onMount } from "solid-js";
 
 function App() {
@@ -52,6 +59,15 @@ function App() {
       }).catch(console.error);
     }, console.error);
   };
+  function saveSettings() {
+    void writeTextFile(
+      "rest/settings.json",
+      JSON.stringify({
+        colors: colors(),
+      }),
+      { dir: BaseDirectory.Config },
+    );
+  }
   createHotkey("Alt+PageUp", false, () => {
     if (brightness() === 100) return;
     setBrightness(brightness() + 5);
@@ -67,14 +83,31 @@ function App() {
     setColor(color() + 100);
     updateRedshift();
     setColors(colors().toSpliced(new Date().getHours(), 1, color()));
+    saveSettings();
   });
   createHotkey("Alt+Delete", true, () => {
     if (color() === 1000) return;
     setColor(color() - 100);
     updateRedshift();
     setColors(colors().toSpliced(new Date().getHours(), 1, color()));
+    saveSettings();
   });
   onMount(() => {
+    void exists("rest/settings.json", { dir: BaseDirectory.Config })
+      .then((res) => {
+        res
+          ? void readTextFile("rest/settings.json", {
+              dir: BaseDirectory.Config,
+            }).then((content) => {
+              const settings = JSON.parse(content) as { colors: number[] };
+              setColors(settings.colors);
+            })
+          : void createDir("rest", {
+              dir: BaseDirectory.Config,
+              recursive: true,
+            });
+      })
+      .then(updateRedshift);
     const width = 1000;
     const height = 700;
     const margin = { top: 25, right: 20, bottom: 30, left: 40 };
@@ -167,6 +200,7 @@ function App() {
               onChange={(e) => {
                 setColors(colors().toSpliced(i, 1, Number(e.target.value)));
                 updateRedshift();
+                saveSettings();
               }}
             />
           )}
