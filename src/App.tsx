@@ -88,7 +88,7 @@ function App() {
   });
   createEffect(() => {
     void invoke("redshift", {
-      color: colors()[new Date().getHours()].toString(),
+      color: color().toString(),
       brightness: `${brightness() / 100}`,
     });
   });
@@ -100,6 +100,7 @@ function App() {
               dir: BaseDirectory.Config,
             }).then((content) => {
               const settings = JSON.parse(content) as { colors: number[] };
+              setColor(settings.colors[new Date().getHours()]);
               setColors(settings.colors);
             })
           : void createDir("rest", {
@@ -198,7 +199,9 @@ function App() {
               value={color()}
               title={`${color()}`}
               onChange={(e) => {
-                setColors(colors().toSpliced(i, 1, Number(e.target.value)));
+                const val = Number(e.target.value);
+                if (i === new Date().getHours()) setColor(val);
+                setColors(colors().toSpliced(i, 1, val));
                 saveSettings();
               }}
             />
