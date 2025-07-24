@@ -1,3 +1,4 @@
+const msg = @import("message.zig");
 const path = @import("path.zig");
 const std = @import("std");
 
@@ -48,7 +49,14 @@ pub fn init() void {
             std.log.err("recvfrom failed: {}", .{e});
             continue;
         };
-        std.debug.print("read: {s}\n", .{buf[0..len]});
+        switch (@as(msg.Type, @enumFromInt(buf[0]))) {
+            .Reset => {
+                std.debug.print("reset: {s}\n", .{buf[1..len]});
+            },
+            .Update => {
+                std.debug.print("update: {s}\n", .{buf[1..len]});
+            },
+        }
     }
 }
 

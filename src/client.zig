@@ -1,6 +1,9 @@
+const msg = @import("message.zig");
 const std = @import("std");
 
 const posix = std.posix;
+
+var buf: [6]u8 = undefined;
 
 pub fn init() !void {
     var sa = posix.Sigaction{
@@ -28,7 +31,11 @@ pub fn init() !void {
     const path = @import("path.zig").getPath(allocator);
     defer allocator.free(path);
     @memcpy(addr.path[0..path.len], path);
-    var buf: [6]u8 = .{ 'H', 'E', 'L', 'L', 'O', '!' };
+    buf = .{ @intFromEnum(msg.Type.Reset), 'H', 'E', 'L', 'L', 'O' };
+    _ = std.posix.sendto(fd, &buf, 0, @ptrCast(&addr), @intCast(path.len + 2)) catch |e| {
+        std.log.err("sendto failed: {}", .{e});
+    };
+    buf[0] = @intFromEnum(msg.Type.Update);
     _ = std.posix.sendto(fd, &buf, 0, @ptrCast(&addr), @intCast(path.len + 2)) catch |e| {
         std.log.err("sendto failed: {}", .{e});
     };
