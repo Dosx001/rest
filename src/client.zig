@@ -3,9 +3,15 @@ const std = @import("std");
 
 const posix = std.posix;
 
+var addr: posix.sockaddr.un = undefined;
 var buf: [6]u8 = undefined;
+var fd: posix.socket_t = undefined;
+var path: []u8 = undefined;
 
-pub fn init() !void {
+var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+const allocator = gpa.allocator();
+
+pub fn init() void {
     var sa = posix.Sigaction{
         .handler = .{ .handler = quit },
         .mask = posix.empty_sigset,
@@ -19,23 +25,29 @@ pub fn init() !void {
     posix.sigaction(posix.SIG.ILL, &sa, null);
     posix.sigaction(posix.SIG.ABRT, &sa, null);
     posix.sigaction(posix.SIG.SEGV, &sa, null);
-    const fd = std.posix.socket(std.posix.AF.UNIX, std.posix.SOCK.DGRAM, 0) catch |e| {
+    fd = std.posix.socket(std.posix.AF.UNIX, std.posix.SOCK.DGRAM, 0) catch |e| {
         std.log.err("socket failed: {}", .{e});
         return;
     };
-    defer std.posix.close(fd);
-    var addr: std.posix.sockaddr.un = undefined;
     addr.family = std.posix.AF.UNIX;
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
-    const allocator = gpa.allocator();
-    const path = @import("path.zig").getPath(allocator);
-    defer allocator.free(path);
+    path = @import("path.zig").getPath(allocator);
     @memcpy(addr.path[0..path.len], path);
+}
+
+pub fn deinit() void {
+    std.posix.close(fd);
+    allocator.free(path);
+}
+
+pub fn reset() void {
     buf = .{ @intFromEnum(msg.Type.Reset), 'H', 'E', 'L', 'L', 'O' };
     _ = std.posix.sendto(fd, &buf, 0, @ptrCast(&addr), @intCast(path.len + 2)) catch |e| {
         std.log.err("sendto failed: {}", .{e});
     };
-    buf[0] = @intFromEnum(msg.Type.Update);
+}
+
+pub fn update() void {
+    buf = .{ @intFromEnum(msg.Type.Update), 'H', 'E', 'L', 'L', 'O' };
     _ = std.posix.sendto(fd, &buf, 0, @ptrCast(&addr), @intCast(path.len + 2)) catch |e| {
         std.log.err("sendto failed: {}", .{e});
     };
@@ -54,4 +66,3 @@ fn exit(signal: i32) callconv(.C) void {
     }
     posix.exit(1);
 }
-

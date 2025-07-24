@@ -5,12 +5,30 @@ const client = @import("client.zig");
 pub fn main() !void {
     if (1 < std.os.argv.len) {
         switch (std.os.argv[1][0]) {
-            'c' => {
+            'r' => {
                 if (std.mem.eql(
                     u8,
                     std.mem.span(std.os.argv[1]),
-                    "client",
-                )) return client.init();
+                    "reset",
+                )) {
+                    client.init();
+                    client.reset();
+                    client.deinit();
+                    return;
+                }
+                return error.InvalidArgument;
+            },
+            'u' => {
+                if (std.mem.eql(
+                    u8,
+                    std.mem.span(std.os.argv[1]),
+                    "update",
+                )) {
+                    client.init();
+                    client.update();
+                    client.deinit();
+                    return;
+                }
                 return error.InvalidArgument;
             },
             else => {},
