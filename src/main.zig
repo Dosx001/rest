@@ -6,6 +6,12 @@ const cli = @import("cli.zig");
 pub fn main() !void {
     if (1 < std.os.argv.len) {
         switch (cli.parse(std.mem.span(std.os.argv[1]))) {
+            .Cron => {
+                client.init();
+                client.cron();
+                client.deinit();
+                return;
+            },
             .Reset => {
                 client.init();
                 client.reset();

@@ -2,14 +2,23 @@ const msg = @import("message.zig");
 const path = @import("path.zig");
 const std = @import("std");
 
+const c = @cImport({
+    @cInclude("time.h");
+});
+
 const posix = std.posix;
 
+const Settings = struct {
+    colors: [24]u16,
+};
+
 var PATH: []u8 = undefined;
+var fd: std.posix.socket_t = undefined;
+var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+const allocator = gpa.allocator();
 
 pub fn init() void {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
-    const allocator = gpa.allocator();
-    const fd = posix.socket(posix.AF.UNIX, posix.SOCK.DGRAM, 0) catch |e| {
+    fd = posix.socket(posix.AF.UNIX, posix.SOCK.DGRAM, 0) catch |e| {
         std.log.err("socket failed: {}", .{e});
         return;
     };
@@ -40,16 +49,28 @@ pub fn init() void {
     posix.sigaction(posix.SIG.ILL, &sa, null);
     posix.sigaction(posix.SIG.ABRT, &sa, null);
     posix.sigaction(posix.SIG.SEGV, &sa, null);
+    loop();
+}
+
+fn loop() void {
     var buf: [8]u8 = undefined;
     var client: posix.sockaddr.un = undefined;
     var client_len: posix.socklen_t = @sizeOf(posix.sockaddr.un);
     var len: usize = undefined;
+    var colors: [24]u32 = undefined;
+    load(&colors);
     while (true) {
         len = posix.recvfrom(fd, &buf, 0, @ptrCast(&client), &client_len) catch |e| {
             std.log.err("recvfrom failed: {}", .{e});
             continue;
         };
         switch (@as(msg.Type, @enumFromInt(buf[0]))) {
+            .Cron => {
+                const time = c.time(0);
+                const hour: usize = @intCast(c.localtime(&time).*.tm_hour);
+                std.debug.print("hour: {}\n", .{hour});
+                std.debug.print("color: {}\n", .{colors[hour]});
+            },
             .Reset => {
                 std.debug.print("reset: {s}\n", .{buf[1..len]});
             },
@@ -57,6 +78,30 @@ pub fn init() void {
                 std.debug.print("update: {s}\n", .{buf[1..len]});
             },
         }
+    }
+}
+
+fn load(buf: *[24]u32) void {
+    const user = std.process.getEnvVarOwned(
+        allocator,
+        "USER",
+    ) catch unreachable;
+    defer allocator.free(user);
+    const json = std.fmt.allocPrint(
+        allocator,
+        "/home/{s}/.config/rest/settings.json",
+        .{user},
+    ) catch unreachable;
+    defer allocator.free(json);
+    const file = std.fs.openFileAbsolute(json, .{}) catch unreachable;
+    defer file.close();
+    const size = file.getEndPos() catch unreachable;
+    const data = file.readToEndAlloc(allocator, size) catch unreachable;
+    defer allocator.free(data);
+    const parsed = std.json.parseFromSlice(Settings, allocator, data, .{}) catch unreachable;
+    defer parsed.deinit();
+    inline for (parsed.value.colors, 0..) |color, i| {
+        buf[i] = color;
     }
 }
 

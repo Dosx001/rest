@@ -1,11 +1,13 @@
 pub const Type = enum {
+    Cron,
     Reset,
-    Update,
     Unknown,
+    Update,
 };
 
 pub fn parse(buf: []u8) Type {
     switch (buf[0]) {
+        'c' => if (compare("ron", buf)) return .Cron,
         'r' => if (compare("eset", buf)) return .Reset,
         'u' => if (compare("pdate", buf)) return .Update,
         else => return .Unknown,

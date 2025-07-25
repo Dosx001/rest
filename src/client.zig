@@ -39,15 +39,22 @@ pub fn deinit() void {
     allocator.free(path);
 }
 
+pub fn cron() void {
+    buf = .{ @intFromEnum(msg.Type.Cron), 0, 0, 0, 0, 0 };
+    _ = std.posix.sendto(fd, &buf, 0, @ptrCast(&addr), @intCast(path.len + 2)) catch |e| {
+        std.log.err("sendto failed: {}", .{e});
+    };
+}
+
 pub fn reset() void {
-    buf = .{ @intFromEnum(msg.Type.Reset), 'H', 'E', 'L', 'L', 'O' };
+    buf = .{ @intFromEnum(msg.Type.Reset), 0, 0, 0, 0, 0 };
     _ = std.posix.sendto(fd, &buf, 0, @ptrCast(&addr), @intCast(path.len + 2)) catch |e| {
         std.log.err("sendto failed: {}", .{e});
     };
 }
 
 pub fn update() void {
-    buf = .{ @intFromEnum(msg.Type.Update), 'H', 'E', 'L', 'L', 'O' };
+    buf = .{ @intFromEnum(msg.Type.Update), 0, 0, 0, 0, 0 };
     _ = std.posix.sendto(fd, &buf, 0, @ptrCast(&addr), @intCast(path.len + 2)) catch |e| {
         std.log.err("sendto failed: {}", .{e});
     };
