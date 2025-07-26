@@ -1,11 +1,6 @@
-pub const Type = enum {
-    Cron,
-    Reset,
-    Unknown,
-    Update,
-};
+const msg = @import("message.zig");
 
-pub fn parse(buf: []u8) Type {
+pub fn parse(buf: []u8) msg.Type {
     switch (buf[0]) {
         'c' => if (compare("ron", buf)) return .Cron,
         'r' => if (compare("eset", buf)) return .Reset,
