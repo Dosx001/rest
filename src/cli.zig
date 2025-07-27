@@ -8,10 +8,31 @@ pub fn parse(argv: [][*:0]u8) msg.Type {
     for (1..argv.len) |i| {
         const buf = std.mem.span(argv[i]);
         switch (buf[0]) {
+            'b' => {
+                if (compare("right", buf)) {
+                    if (cmd) |_| return .Error;
+                    cmd = .Bright;
+                    continue;
+                }
+            },
             'c' => {
                 if (compare("ron", buf)) {
                     if (cmd) |_| return .Error;
                     cmd = .Cron;
+                    continue;
+                }
+            },
+            'd' => {
+                if (compare("ec", buf)) {
+                    if (cmd != .Bright) return .Error;
+                    cmd = .BrightDec;
+                    continue;
+                }
+            },
+            'i' => {
+                if (compare("nc", buf)) {
+                    if (cmd != .Bright) return .Error;
+                    cmd = .BrightInc;
                     continue;
                 }
             },

@@ -39,6 +39,20 @@ pub fn deinit() void {
     allocator.free(path);
 }
 
+pub fn bright_inc() void {
+    buf = .{@intFromEnum(msg.Type.BrightInc)};
+    _ = std.posix.sendto(fd, &buf, 0, @ptrCast(&addr), @intCast(path.len + 2)) catch |e| {
+        std.log.err("sendto failed: {}", .{e});
+    };
+}
+
+pub fn bright_dec() void {
+    buf = .{@intFromEnum(msg.Type.BrightDec)};
+    _ = std.posix.sendto(fd, &buf, 0, @ptrCast(&addr), @intCast(path.len + 2)) catch |e| {
+        std.log.err("sendto failed: {}", .{e});
+    };
+}
+
 pub fn cron() void {
     buf = .{@intFromEnum(msg.Type.Cron)};
     _ = std.posix.sendto(fd, &buf, 0, @ptrCast(&addr), @intCast(path.len + 2)) catch |e| {

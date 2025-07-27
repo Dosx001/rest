@@ -12,6 +12,8 @@ const Settings = struct {
     colors: [24]u16,
 };
 
+var bright: u8 = 10;
+
 var PATH: []u8 = undefined;
 var fd: std.posix.socket_t = undefined;
 var gpa = std.heap.GeneralPurposeAllocator(.{}){};
@@ -69,6 +71,18 @@ fn loop() void {
             continue;
         };
         switch (@as(msg.Type, @enumFromInt(buf[0]))) {
+            .BrightInc => {
+                if (bright == 10) continue;
+                bright += 1;
+                const time = c.time(0);
+                cmd(colors[@intCast(c.localtime(&time).*.tm_hour)]);
+            },
+            .BrightDec => {
+                if (bright == 0) continue;
+                bright -= 1;
+                const time = c.time(0);
+                cmd(colors[@intCast(c.localtime(&time).*.tm_hour)]);
+            },
             .Cron => {
                 const time = c.time(0);
                 cmd(colors[@intCast(c.localtime(&time).*.tm_hour)]);
@@ -117,7 +131,13 @@ fn cmd(color: u16) void {
         "{d}",
         .{color},
     ) catch unreachable;
-    const args = [_][]const u8{ "redshift", "-P", "-O", num };
+    var buf2: [2]u8 = undefined;
+    const bgt = if (bright == 10) "1" else std.fmt.bufPrint(
+        &buf2,
+        ".{d}",
+        .{bright},
+    ) catch unreachable;
+    const args = [_][]const u8{ "redshift", "-P", "-O", num, "-b", bgt };
     var child = std.process.Child.init(
         &args,
         allocator,
