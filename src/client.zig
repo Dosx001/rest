@@ -3,15 +3,12 @@ const std = @import("std");
 
 const posix = std.posix;
 
-var addr: posix.sockaddr.un = undefined;
 var buf: [1]u8 = undefined;
-var fd: posix.socket_t = undefined;
-var path: []u8 = undefined;
 
 var gpa = std.heap.GeneralPurposeAllocator(.{}){};
 const allocator = gpa.allocator();
 
-pub fn init() void {
+pub fn init(msg_type: msg.Type) void {
     var sa = posix.Sigaction{
         .handler = .{ .handler = quit },
         .mask = posix.empty_sigset,
@@ -25,50 +22,19 @@ pub fn init() void {
     posix.sigaction(posix.SIG.ILL, &sa, null);
     posix.sigaction(posix.SIG.ABRT, &sa, null);
     posix.sigaction(posix.SIG.SEGV, &sa, null);
-    fd = std.posix.socket(std.posix.AF.UNIX, std.posix.SOCK.DGRAM, 0) catch |e| {
+    const fd = std.posix.socket(std.posix.AF.UNIX, std.posix.SOCK.DGRAM, 0) catch |e| {
         std.log.err("socket failed: {}", .{e});
         return;
     };
-    addr.family = std.posix.AF.UNIX;
-    path = @import("path.zig").getPath(allocator);
+    defer std.posix.close(fd);
+    var addr = std.posix.sockaddr.un{
+        .family = std.posix.AF.UNIX,
+        .path = undefined,
+    };
+    const path = @import("path.zig").getPath(allocator);
+    defer allocator.free(path);
     @memcpy(addr.path[0..path.len], path);
-}
-
-pub fn deinit() void {
-    std.posix.close(fd);
-    allocator.free(path);
-}
-
-pub fn bright_inc() void {
-    buf = .{@intFromEnum(msg.Type.BrightInc)};
-    _ = std.posix.sendto(fd, &buf, 0, @ptrCast(&addr), @intCast(path.len + 2)) catch |e| {
-        std.log.err("sendto failed: {}", .{e});
-    };
-}
-
-pub fn bright_dec() void {
-    buf = .{@intFromEnum(msg.Type.BrightDec)};
-    _ = std.posix.sendto(fd, &buf, 0, @ptrCast(&addr), @intCast(path.len + 2)) catch |e| {
-        std.log.err("sendto failed: {}", .{e});
-    };
-}
-
-pub fn cron() void {
-    buf = .{@intFromEnum(msg.Type.Cron)};
-    _ = std.posix.sendto(fd, &buf, 0, @ptrCast(&addr), @intCast(path.len + 2)) catch |e| {
-        std.log.err("sendto failed: {}", .{e});
-    };
-}
-
-pub fn reset() void {
-    buf = .{@intFromEnum(msg.Type.Reset)};
-    _ = std.posix.sendto(fd, &buf, 0, @ptrCast(&addr), @intCast(path.len + 2)) catch |e| {
-        std.log.err("sendto failed: {}", .{e});
-    };
-}
-
-pub fn update() void {
-    buf = .{@intFromEnum(msg.Type.Update)};
+    buf = .{@intFromEnum(msg_type)};
     _ = std.posix.sendto(fd, &buf, 0, @ptrCast(&addr), @intCast(path.len + 2)) catch |e| {
         std.log.err("sendto failed: {}", .{e});
     };
