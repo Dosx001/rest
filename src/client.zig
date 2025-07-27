@@ -4,7 +4,7 @@ const std = @import("std");
 const posix = std.posix;
 
 var addr: posix.sockaddr.un = undefined;
-var buf: [6]u8 = undefined;
+var buf: [1]u8 = undefined;
 var fd: posix.socket_t = undefined;
 var path: []u8 = undefined;
 
@@ -40,21 +40,21 @@ pub fn deinit() void {
 }
 
 pub fn cron() void {
-    buf = .{ @intFromEnum(msg.Type.Cron), 0, 0, 0, 0, 0 };
+    buf = .{@intFromEnum(msg.Type.Cron)};
     _ = std.posix.sendto(fd, &buf, 0, @ptrCast(&addr), @intCast(path.len + 2)) catch |e| {
         std.log.err("sendto failed: {}", .{e});
     };
 }
 
 pub fn reset() void {
-    buf = .{ @intFromEnum(msg.Type.Reset), 0, 0, 0, 0, 0 };
+    buf = .{@intFromEnum(msg.Type.Reset)};
     _ = std.posix.sendto(fd, &buf, 0, @ptrCast(&addr), @intCast(path.len + 2)) catch |e| {
         std.log.err("sendto failed: {}", .{e});
     };
 }
 
 pub fn update() void {
-    buf = .{ @intFromEnum(msg.Type.Update), 0, 0, 0, 0, 0 };
+    buf = .{@intFromEnum(msg.Type.Update)};
     _ = std.posix.sendto(fd, &buf, 0, @ptrCast(&addr), @intCast(path.len + 2)) catch |e| {
         std.log.err("sendto failed: {}", .{e});
     };

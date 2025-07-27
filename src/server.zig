@@ -53,7 +53,7 @@ pub fn init() void {
 }
 
 fn loop() void {
-    var buf: [8]u8 = undefined;
+    var buf: [1]u8 = undefined;
     var client: posix.sockaddr.un = undefined;
     var client_len: posix.socklen_t = @sizeOf(posix.sockaddr.un);
     var len: usize = undefined;
@@ -74,7 +74,7 @@ fn loop() void {
                 cmd(colors[@intCast(c.localtime(&time).*.tm_hour)]);
             },
             .Reset => {
-                std.debug.print("reset: {s}\n", .{buf[1..len]});
+                std.debug.print("reset\n", .{});
             },
             .Update => {
                 load(&colors);
