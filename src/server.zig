@@ -111,12 +111,12 @@ fn load(buf: *[24]u16) void {
 }
 
 fn cmd(color: u16) void {
-    const num = std.fmt.allocPrint(
-        allocator,
+    var buf: [4]u8 = undefined;
+    const num = std.fmt.bufPrint(
+        &buf,
         "{d}",
         .{color},
     ) catch unreachable;
-    defer allocator.free(num);
     const args = [_][]const u8{ "redshift", "-P", "-O", num };
     var child = std.process.Child.init(
         &args,
