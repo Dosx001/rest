@@ -95,7 +95,6 @@ fn loop() void {
                 const time = c.time(0);
                 cmd(colors[@intCast(c.localtime(&time).*.tm_hour)]);
             },
-            else => std.debug.print("Error in message", .{}),
         }
     }
 }

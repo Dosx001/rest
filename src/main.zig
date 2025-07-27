@@ -9,6 +9,7 @@ pub fn main() !void {
         return;
     }
     switch (cli.parse(std.os.argv)) {
+        .Bright => return std.log.debug("Bright command needs subcommand inc or dec", .{}),
         .BrightInc => return client.init(.BrightInc),
         .BrightDec => return client.init(.BrightDec),
         .Cron => return client.init(.Cron),
@@ -20,10 +21,6 @@ pub fn main() !void {
         .Update => return client.init(.Update),
         .Unknown => {
             std.log.err("Unknown command: {s}", .{std.os.argv[cli.unknown()]});
-            return;
-        },
-        else => {
-            std.log.err("Error in usage", .{});
             return;
         },
     }

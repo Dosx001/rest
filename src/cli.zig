@@ -1,10 +1,20 @@
 const std = @import("std");
-const msg = @import("message.zig");
+
+pub const Type = enum {
+    Bright,
+    BrightDec,
+    BrightInc,
+    Cron,
+    Error,
+    Reset,
+    Unknown,
+    Update,
+};
 
 var index: usize = undefined;
-var cmd: ?msg.Type = undefined;
+var cmd: ?Type = undefined;
 
-pub fn parse(argv: [][*:0]u8) msg.Type {
+pub fn parse(argv: [][*:0]u8) Type {
     for (1..argv.len) |i| {
         const buf = std.mem.span(argv[i]);
         switch (buf[0]) {
