@@ -1,13 +1,40 @@
+const std = @import("std");
 const msg = @import("message.zig");
 
-pub fn parse(buf: []u8) msg.Type {
-    switch (buf[0]) {
-        'c' => if (compare("ron", buf)) return .Cron,
-        'r' => if (compare("eset", buf)) return .Reset,
-        'u' => if (compare("pdate", buf)) return .Update,
-        else => return .Unknown,
+var index: usize = undefined;
+var cmd: ?msg.Type = undefined;
+
+pub fn parse(argv: [][*:0]u8) msg.Type {
+    for (1..argv.len) |i| {
+        const buf = std.mem.span(argv[i]);
+        switch (buf[0]) {
+            'c' => {
+                if (compare("ron", buf)) {
+                    if (cmd) |_| return .Error;
+                    cmd = .Cron;
+                    continue;
+                }
+            },
+            'r' => {
+                if (compare("eset", buf)) {
+                    if (cmd) |_| return .Error;
+                    cmd = .Reset;
+                    continue;
+                }
+            },
+            'u' => {
+                if (compare("pdate", buf)) {
+                    if (cmd) |_| return .Error;
+                    cmd = .Update;
+                    continue;
+                }
+            },
+            else => {},
+        }
+        index = i;
+        return .Unknown;
     }
-    return .Unknown;
+    return cmd.?;
 }
 
 fn compare(str: []const u8, buf: []u8) bool {
@@ -16,4 +43,8 @@ fn compare(str: []const u8, buf: []u8) bool {
         if (c != buf[i]) return false;
     }
     return true;
+}
+
+pub fn unknown() usize {
+    return index;
 }

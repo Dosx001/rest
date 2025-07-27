@@ -76,12 +76,12 @@ fn loop() void {
             .Reset => {
                 std.debug.print("reset: {s}\n", .{buf[1..len]});
             },
-            .Unknown => std.debug.print("Unknown command: {d}\n", .{buf[0]}),
             .Update => {
                 load(&colors);
                 const time = c.time(0);
                 cmd(colors[@intCast(c.localtime(&time).*.tm_hour)]);
             },
+            else => std.debug.print("Error in message", .{}),
         }
     }
 }
