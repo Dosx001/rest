@@ -74,28 +74,17 @@ fn loop() void {
             .BrightInc => {
                 if (bright == 58) continue;
                 bright += 1;
-                const time = c.time(0);
-                cmd(colors[@intCast(c.localtime(&time).*.tm_hour)]);
             },
             .BrightDec => {
                 if (bright == 49) continue;
                 bright -= 1;
-                const time = c.time(0);
-                cmd(colors[@intCast(c.localtime(&time).*.tm_hour)]);
             },
-            .Cron => {
-                const time = c.time(0);
-                cmd(colors[@intCast(c.localtime(&time).*.tm_hour)]);
-            },
-            .Reset => {
-                std.debug.print("reset\n", .{});
-            },
-            .Update => {
-                load(&colors);
-                const time = c.time(0);
-                cmd(colors[@intCast(c.localtime(&time).*.tm_hour)]);
-            },
+            .Cron => {},
+            .Reset => bright = 58,
+            .Update => load(&colors),
         }
+        const time = c.time(0);
+        cmd(colors[@intCast(c.localtime(&time).*.tm_hour)]);
     }
 }
 
