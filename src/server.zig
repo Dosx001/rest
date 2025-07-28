@@ -9,10 +9,10 @@ const c = @cImport({
 const posix = std.posix;
 
 const Settings = struct {
-    colors: [24]u16,
+    colors: [24]u8,
 };
 
-var bright: u8 = 10;
+var bright: u8 = 58;
 
 var PATH: []u8 = undefined;
 var fd: std.posix.socket_t = undefined;
@@ -59,7 +59,7 @@ fn loop() void {
     var client: posix.sockaddr.un = undefined;
     var client_len: posix.socklen_t = @sizeOf(posix.sockaddr.un);
     var len: usize = undefined;
-    var colors: [24]u16 = undefined;
+    var colors: [24]u8 = undefined;
     load(&colors);
     {
         const time = c.time(0);
@@ -72,13 +72,13 @@ fn loop() void {
         };
         switch (@as(msg.Type, @enumFromInt(buf[0]))) {
             .BrightInc => {
-                if (bright == 10) continue;
+                if (bright == 58) continue;
                 bright += 1;
                 const time = c.time(0);
                 cmd(colors[@intCast(c.localtime(&time).*.tm_hour)]);
             },
             .BrightDec => {
-                if (bright == 0) continue;
+                if (bright == 49) continue;
                 bright -= 1;
                 const time = c.time(0);
                 cmd(colors[@intCast(c.localtime(&time).*.tm_hour)]);
@@ -99,7 +99,7 @@ fn loop() void {
     }
 }
 
-fn load(buf: *[24]u16) void {
+fn load(buf: *[24]u8) void {
     const user = std.process.getEnvVarOwned(
         allocator,
         "USER",
@@ -123,20 +123,18 @@ fn load(buf: *[24]u16) void {
     }
 }
 
-fn cmd(color: u16) void {
-    var buf: [4]u8 = undefined;
-    const num = std.fmt.bufPrint(
-        &buf,
+fn cmd(color: u8) void {
+    var num = [4]u8{ 0, 0, '0', '0' };
+    _ = std.fmt.bufPrint(
+        &num,
         "{d}",
         .{color},
     ) catch unreachable;
-    var buf2: [2]u8 = undefined;
-    const bgt = if (bright == 10) "1" else std.fmt.bufPrint(
-        &buf2,
-        ".{d}",
-        .{bright},
-    ) catch unreachable;
-    const args = [_][]const u8{ "redshift", "-P", "-O", num, "-b", bgt };
+    var bgt = [2]u8{ '.', 0 };
+    if (bright == 58) {
+        bgt[0] = '1';
+    } else bgt[1] = bright;
+    const args = [_][]const u8{ "redshift", "-P", "-O", &num, "-b", &bgt };
     var child = std.process.Child.init(
         &args,
         allocator,
