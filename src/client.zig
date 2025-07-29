@@ -11,7 +11,7 @@ pub fn init(msg_type: msg.Type) void {
         std.posix.SOCK.DGRAM,
         0,
     ) catch |e| {
-        std.log.err("socket failed: {}", .{e});
+        std.log.err("client socket failed: {}", .{e});
         return;
     };
     defer std.posix.close(fd);
@@ -21,7 +21,7 @@ pub fn init(msg_type: msg.Type) void {
     };
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
     const allocator = gpa.allocator();
-    const path = @import("path.zig").getPath(allocator);
+    const path = @import("path.zig").getPath(allocator) catch return;
     defer allocator.free(path);
     @memcpy(addr.path[0..path.len], path);
     const buf = [1]u8{@intFromEnum(msg_type)};

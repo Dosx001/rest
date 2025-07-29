@@ -25,23 +25,24 @@ const allocator = gpa.allocator();
 pub fn init() void {
     sig.init(quit, exit);
     fd = posix.socket(posix.AF.UNIX, posix.SOCK.DGRAM, 0) catch |e| {
-        std.log.err("socket failed: {}", .{e});
+        std.log.err("Server socket failed: {}", .{e});
         return;
     };
     defer posix.close(fd);
     var addr: posix.sockaddr.un = undefined;
     addr.family = posix.AF.UNIX;
-    PATH = path.getPath(allocator);
+    PATH = path.getPath(allocator) catch {
+        std.log.err("Server not started", .{});
+        return;
+    };
     defer allocator.free(PATH);
     @memcpy(addr.path[0..PATH.len], PATH);
     posix.bind(fd, @ptrCast(&addr), @intCast(PATH.len + 2)) catch |e| {
-        std.log.err("bind failed: {}", .{e});
+        std.log.err("Bind failed: {}", .{e});
         return;
     };
-    defer posix.unlink(PATH) catch |e| std.log.err(
-        "unlink failed: {}",
-        .{e},
-    );
+    defer posix.unlink(PATH) catch |e|
+        std.log.err("unlink failed: {}", .{e});
     loop();
 }
 
@@ -51,10 +52,16 @@ fn loop() void {
     var client_len: posix.socklen_t = @sizeOf(posix.sockaddr.un);
     var len: usize = undefined;
     var colors: [24]u8 = undefined;
-    load(&colors);
+    load(&colors) catch {
+        std.log.err("Server not started", .{});
+        return;
+    };
     {
         const time = c.time(0);
-        cmd(colors[@intCast(c.localtime(&time).*.tm_hour)]);
+        cmd(colors[@intCast(c.localtime(&time).*.tm_hour)]) catch {
+            std.log.err("Server not started", .{});
+            return;
+        };
     }
     while (true) {
         len = posix.recvfrom(fd, &buf, 0, @ptrCast(&client), &client_len) catch |e| {
@@ -73,44 +80,65 @@ fn loop() void {
             },
             .Cron => {},
             .Reset => bright = 58,
-            .Update => load(&colors),
+            .Update => load(&colors) catch continue,
         }
         const time = c.time(0);
-        cmd(colors[@intCast(c.localtime(&time).*.tm_hour)]);
+        cmd(colors[@intCast(c.localtime(&time).*.tm_hour)]) catch continue;
     }
 }
 
-fn load(buf: *[24]u8) void {
+fn load(buf: *[24]u8) !void {
     const user = std.process.getEnvVarOwned(
         allocator,
         "USER",
-    ) catch unreachable;
+    ) catch |e| {
+        std.log.err("USER env var for settings failed: {}", .{e});
+        return e;
+    };
     defer allocator.free(user);
     const json = std.fmt.allocPrint(
         allocator,
         "/home/{s}/.config/rest/settings.json",
         .{user},
-    ) catch unreachable;
+    ) catch |e| {
+        std.log.err("path allocation for settings failed: {}", .{e});
+        return e;
+    };
     defer allocator.free(json);
-    const file = std.fs.openFileAbsolute(json, .{}) catch unreachable;
+    const file = std.fs.openFileAbsolute(json, .{}) catch |e| {
+        std.log.err("file open for settings failed: {}", .{e});
+        return e;
+    };
     defer file.close();
-    const size = file.getEndPos() catch unreachable;
-    const data = file.readToEndAlloc(allocator, size) catch unreachable;
+    const size = file.getEndPos() catch |e| {
+        std.log.err("file size for settings failed: {}", .{e});
+        return e;
+    };
+    const data = file.readToEndAlloc(allocator, size) catch |e| {
+        std.log.err("file read for settings failed: {}", .{e});
+        return e;
+    };
     defer allocator.free(data);
-    const parsed = std.json.parseFromSlice(Settings, allocator, data, .{}) catch unreachable;
+    const parsed = std.json.parseFromSlice(Settings, allocator, data, .{}) catch |e| {
+        std.log.err("json parse for settings failed: {}", .{e});
+        return e;
+    };
     defer parsed.deinit();
     inline for (parsed.value.colors, 0..) |color, i| {
         buf[i] = color;
     }
 }
 
-fn cmd(color: u8) void {
+fn cmd(color: u8) !void {
     var num = [4]u8{ 0, 0, '0', '0' };
     _ = std.fmt.bufPrint(
         &num,
         "{d}",
         .{color},
-    ) catch unreachable;
+    ) catch |e| {
+        std.log.err("color formatting failed: {}", .{e});
+        return e;
+    };
     var bgt = [2]u8{ '.', 0 };
     if (bright == 58) {
         bgt[0] = '1';
@@ -120,7 +148,10 @@ fn cmd(color: u8) void {
         &args,
         allocator,
     );
-    child.spawn() catch unreachable;
+    child.spawn() catch |e| {
+        std.log.err("child spawn failed: {}", .{e});
+        return e;
+    };
     switch (action) {
         .BrightInc => log.notify("Brightness increased to {s}", .{&bgt}),
         .BrightDec => log.notify("Brightness decreased to {s}", .{&bgt}),
