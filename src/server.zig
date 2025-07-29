@@ -1,3 +1,4 @@
+const log = @import("log.zig");
 const msg = @import("message.zig");
 const path = @import("path.zig");
 const sig = @import("signal.zig");
@@ -14,6 +15,7 @@ const Settings = struct {
 };
 
 var bright: u8 = 58;
+var action: msg.Type = .Cron;
 
 var PATH: []u8 = undefined;
 var fd: std.posix.socket_t = undefined;
@@ -59,7 +61,8 @@ fn loop() void {
             std.log.err("recvfrom failed: {}", .{e});
             continue;
         };
-        switch (@as(msg.Type, @enumFromInt(buf[0]))) {
+        action = @enumFromInt(buf[0]);
+        switch (action) {
             .BrightInc => {
                 if (bright == 58) continue;
                 bright += 1;
@@ -118,6 +121,13 @@ fn cmd(color: u8) void {
         allocator,
     );
     child.spawn() catch unreachable;
+    switch (action) {
+        .BrightInc => log.notify("Brightness increased to {s}", .{&bgt}),
+        .BrightDec => log.notify("Brightness decreased to {s}", .{&bgt}),
+        .Cron => log.notify("Cron job ran: {s}", .{&num}),
+        .Reset => log.notify("Brightness reset", .{}),
+        .Update => log.notify("Settings updated", .{}),
+    }
 }
 
 fn quit(_: i32) callconv(.C) void {

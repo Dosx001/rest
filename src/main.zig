@@ -2,8 +2,15 @@ const cli = @import("cli.zig");
 const client = @import("client.zig");
 const server = @import("server.zig");
 const std = @import("std");
+const log = @import("log.zig");
+
+pub const std_options: std.Options = .{
+    .logFn = log.logger,
+};
 
 pub fn main() !void {
+    log.init();
+    defer log.deinit();
     if (1 == std.os.argv.len) {
         server.init();
         return;
