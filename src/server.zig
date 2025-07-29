@@ -1,5 +1,6 @@
 const msg = @import("message.zig");
 const path = @import("path.zig");
+const sig = @import("signal.zig");
 const std = @import("std");
 
 const c = @cImport({
@@ -20,6 +21,7 @@ var gpa = std.heap.GeneralPurposeAllocator(.{}){};
 const allocator = gpa.allocator();
 
 pub fn init() void {
+    sig.init(quit, exit);
     fd = posix.socket(posix.AF.UNIX, posix.SOCK.DGRAM, 0) catch |e| {
         std.log.err("socket failed: {}", .{e});
         return;
@@ -38,19 +40,6 @@ pub fn init() void {
         "unlink failed: {}",
         .{e},
     );
-    var sa = posix.Sigaction{
-        .handler = .{ .handler = quit },
-        .mask = posix.empty_sigset,
-        .flags = 0,
-    };
-    posix.sigaction(posix.SIG.HUP, &sa, null);
-    posix.sigaction(posix.SIG.INT, &sa, null);
-    posix.sigaction(posix.SIG.QUIT, &sa, null);
-    posix.sigaction(posix.SIG.TERM, &sa, null);
-    sa.handler = .{ .handler = exit };
-    posix.sigaction(posix.SIG.ILL, &sa, null);
-    posix.sigaction(posix.SIG.ABRT, &sa, null);
-    posix.sigaction(posix.SIG.SEGV, &sa, null);
     loop();
 }
 
