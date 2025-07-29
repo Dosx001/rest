@@ -4,14 +4,13 @@ const std = @import("std");
 
 const posix = std.posix;
 
-var buf: [1]u8 = undefined;
-
-var gpa = std.heap.GeneralPurposeAllocator(.{}){};
-const allocator = gpa.allocator();
-
 pub fn init(msg_type: msg.Type) void {
     sig.init(quit, exit);
-    const fd = std.posix.socket(std.posix.AF.UNIX, std.posix.SOCK.DGRAM, 0) catch |e| {
+    const fd = std.posix.socket(
+        std.posix.AF.UNIX,
+        std.posix.SOCK.DGRAM,
+        0,
+    ) catch |e| {
         std.log.err("socket failed: {}", .{e});
         return;
     };
@@ -20,11 +19,19 @@ pub fn init(msg_type: msg.Type) void {
         .family = std.posix.AF.UNIX,
         .path = undefined,
     };
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    const allocator = gpa.allocator();
     const path = @import("path.zig").getPath(allocator);
     defer allocator.free(path);
     @memcpy(addr.path[0..path.len], path);
-    buf = .{@intFromEnum(msg_type)};
-    _ = std.posix.sendto(fd, &buf, 0, @ptrCast(&addr), @intCast(path.len + 2)) catch |e| {
+    const buf = [1]u8{@intFromEnum(msg_type)};
+    _ = std.posix.sendto(
+        fd,
+        &buf,
+        0,
+        @ptrCast(&addr),
+        @intCast(path.len + 2),
+    ) catch |e| {
         std.log.err("sendto failed: {}", .{e});
     };
 }
