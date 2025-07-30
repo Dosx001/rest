@@ -96,16 +96,16 @@ fn load(buf: *[24]u8) !void {
         return e;
     };
     defer allocator.free(user);
-    const json = std.fmt.allocPrint(
+    const zon = std.fmt.allocPrint(
         allocator,
-        "/home/{s}/.config/rest/settings.json",
+        "/home/{s}/.config/rest.zon",
         .{user},
     ) catch |e| {
         std.log.err("path allocation for settings failed: {}", .{e});
         return e;
     };
-    defer allocator.free(json);
-    const file = std.fs.openFileAbsolute(json, .{}) catch |e| {
+    defer allocator.free(zon);
+    const file = std.fs.openFileAbsolute(zon, .{}) catch |e| {
         std.log.err("file open for settings failed: {}", .{e});
         return e;
     };
@@ -119,12 +119,19 @@ fn load(buf: *[24]u8) !void {
         return e;
     };
     defer allocator.free(data);
-    const parsed = std.json.parseFromSlice(Settings, allocator, data, .{}) catch |e| {
-        std.log.err("json parse for settings failed: {}", .{e});
+    var status: std.zon.parse.Status = .{};
+    const parsed = std.zon.parse.fromSlice(
+        Settings,
+        allocator,
+        @ptrCast(data),
+        &status,
+        .{},
+    ) catch |e| {
+        std.log.err("zon parse for settings failed: {}", .{e});
         return e;
     };
-    defer parsed.deinit();
-    inline for (parsed.value.temps, 0..) |temp, i| {
+    defer std.zon.parse.free(allocator, parsed);
+    inline for (parsed.temps, 0..) |temp, i| {
         buf[i] = temp;
     }
 }
