@@ -11,7 +11,7 @@ const c = @cImport({
 const posix = std.posix;
 
 const Settings = struct {
-    colors: [24]u8,
+    temps: [24]u8,
 };
 
 var bright: u8 = 58;
@@ -51,14 +51,14 @@ fn loop() void {
     var client: posix.sockaddr.un = undefined;
     var client_len: posix.socklen_t = @sizeOf(posix.sockaddr.un);
     var len: usize = undefined;
-    var colors: [24]u8 = undefined;
-    load(&colors) catch {
+    var temps: [24]u8 = undefined;
+    load(&temps) catch {
         std.log.err("Server not started", .{});
         return;
     };
     {
         const time = c.time(0);
-        cmd(colors[@intCast(c.localtime(&time).*.tm_hour)]) catch {
+        cmd(temps[@intCast(c.localtime(&time).*.tm_hour)]) catch {
             std.log.err("Server not started", .{});
             return;
         };
@@ -80,10 +80,10 @@ fn loop() void {
             },
             .Cron => {},
             .Reset => bright = 58,
-            .Update => load(&colors) catch continue,
+            .Update => load(&temps) catch continue,
         }
         const time = c.time(0);
-        cmd(colors[@intCast(c.localtime(&time).*.tm_hour)]) catch continue;
+        cmd(temps[@intCast(c.localtime(&time).*.tm_hour)]) catch continue;
     }
 }
 
@@ -124,19 +124,19 @@ fn load(buf: *[24]u8) !void {
         return e;
     };
     defer parsed.deinit();
-    inline for (parsed.value.colors, 0..) |color, i| {
-        buf[i] = color;
+    inline for (parsed.value.temps, 0..) |temp, i| {
+        buf[i] = temp;
     }
 }
 
-fn cmd(color: u8) !void {
+fn cmd(temp: u8) !void {
     var num = [4]u8{ 0, 0, '0', '0' };
     _ = std.fmt.bufPrint(
         &num,
         "{d}",
-        .{color},
+        .{temp},
     ) catch |e| {
-        std.log.err("color formatting failed: {}", .{e});
+        std.log.err("temperature formatting failed: {}", .{e});
         return e;
     };
     var bgt = [2]u8{ '.', 0 };
