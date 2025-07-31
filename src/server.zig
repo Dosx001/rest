@@ -146,10 +146,10 @@ fn cmd(temp: u8) !void {
         std.log.err("temperature formatting failed: {}", .{e});
         return e;
     };
-    var bgt = [2]u8{ '.', 0 };
-    if (bright == 58) {
-        bgt[0] = '1';
-    } else bgt[1] = bright;
+    const bgt: [3]u8 = if (bright == 58)
+        .{ '1', 0, 0 }
+    else
+        .{ '0', '.', bright };
     const args = [_][]const u8{ "redshift", "-P", "-O", &num, "-b", &bgt };
     var child = std.process.Child.init(
         &args,
@@ -160,10 +160,9 @@ fn cmd(temp: u8) !void {
         return e;
     };
     switch (action) {
-        .BrightInc => log.notify("Brightness increased to {s}", .{&bgt}),
-        .BrightDec => log.notify("Brightness decreased to {s}", .{&bgt}),
-        .Cron => log.notify("Cron job ran: {s}", .{&num}),
-        .Reset => log.notify("Brightness reset", .{}),
+        .BrightInc, .BrightDec => log.notify("Brightness: {s}", .{&bgt}),
+        .Cron => log.notify("Temperature: {s}K", .{&num}),
+        .Reset => log.notify("Daily reset", .{}),
         .Update => log.notify("Settings updated", .{}),
     }
 }
