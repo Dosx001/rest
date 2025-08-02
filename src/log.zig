@@ -7,6 +7,21 @@ const c = @cImport({
 
 pub fn init() void {
     _ = c.notify_init("rest");
+    if (@import("builtin").mode != .Debug) {
+        c.notify_set_app_icon("/usr/share/icons/hicolor/128x128/apps/rest.png");
+    } else {
+        var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+        const allocator = gpa.allocator();
+        const path = std.fs.selfExeDirPathAlloc(allocator) catch unreachable;
+        defer allocator.free(path);
+        const icon = std.fmt.allocPrint(
+            allocator,
+            "{s}pkg/assets/128x128.png",
+            .{path[0 .. path.len - 11]},
+        ) catch unreachable;
+        defer allocator.free(icon);
+        c.notify_set_app_icon(icon.ptr);
+    }
 }
 
 pub fn deinit() void {
