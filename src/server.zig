@@ -14,7 +14,7 @@ const Settings = struct {
     temps: [24]u8,
 };
 
-var bright: u8 = 58;
+var bright: u8 = 100;
 var action: msg.Type = .Cron;
 
 var PATH: []u8 = undefined;
@@ -71,12 +71,12 @@ fn loop() void {
         action = @enumFromInt(buf[0]);
         switch (action) {
             .BrightInc => {
-                if (bright == 58) continue;
-                bright += 1;
+                if (bright == 100) continue;
+                bright += 5;
             },
             .BrightDec => {
-                if (bright == 49) continue;
-                bright -= 1;
+                if (bright == 5) continue;
+                bright -= 5;
             },
             .Cron => {},
             .Reset => bright = 58,
@@ -146,10 +146,15 @@ fn cmd(temp: u8) !void {
         std.log.err("temperature formatting failed: {}", .{e});
         return e;
     };
-    const bgt: [3]u8 = if (bright == 58)
-        .{ '1', 0, 0 }
-    else
-        .{ '0', '.', bright };
+    var bgt: [4]u8 = .{ '1', 0, 0, 0 };
+    if (bright != 100) _ = std.fmt.bufPrint(
+        &bgt,
+        "0.{d}",
+        .{bright},
+    ) catch |e| {
+        std.log.err("brightness formatting failed: {}", .{e});
+        return e;
+    };
     const args = [_][]const u8{ "redshift", "-P", "-O", &num, "-b", &bgt };
     var child = std.process.Child.init(
         &args,
