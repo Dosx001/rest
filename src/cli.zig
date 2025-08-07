@@ -14,9 +14,9 @@ pub const Type = enum {
 var index: usize = undefined;
 var cmd: ?Type = undefined;
 
-pub fn parse(argv: [][*:0]u8) Type {
-    for (1..argv.len) |i| {
-        const buf = std.mem.span(argv[i]);
+pub fn parse() Type {
+    for (1..std.os.argv.len) |i| {
+        const buf = std.mem.span(std.os.argv[i]);
         switch (buf[0]) {
             'b' => {
                 if (compare("right", buf)) {

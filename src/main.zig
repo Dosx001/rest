@@ -15,7 +15,7 @@ pub fn main() !void {
         server.init();
         return;
     }
-    switch (cli.parse(std.os.argv)) {
+    switch (cli.parse()) {
         .Bright => return std.log.debug("Bright command needs subcommand inc or dec", .{}),
         .BrightInc => return client.init(.BrightInc),
         .BrightDec => return client.init(.BrightDec),
