@@ -1,8 +1,9 @@
 const cli = @import("cli.zig");
 const client = @import("client.zig");
+const log = @import("log.zig");
+const mon = @import("monitor.zig");
 const server = @import("server.zig");
 const std = @import("std");
-const log = @import("log.zig");
 
 pub const std_options: std.Options = .{
     .logFn = log.logger,
@@ -12,7 +13,13 @@ pub fn main() !void {
     log.init();
     defer log.deinit();
     if (1 == std.os.argv.len) {
+        mon.sigprocmask();
+        const thread = std.Thread.spawn(.{}, mon.init, .{}) catch {
+            std.log.err("Monitor thread failed", .{});
+            return;
+        };
         server.init();
+        thread.join();
         return;
     }
     switch (cli.parse()) {

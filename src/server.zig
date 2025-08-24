@@ -1,7 +1,5 @@
 const log = @import("log.zig");
 const msg = @import("message.zig");
-const path = @import("path.zig");
-const sig = @import("signal.zig");
 const std = @import("std");
 
 const c = @cImport({
@@ -17,13 +15,11 @@ const Settings = struct {
 var bright: u8 = 100;
 var action: msg.Type = .Cron;
 
-var PATH: []u8 = undefined;
 var fd: std.posix.socket_t = undefined;
 var gpa = std.heap.GeneralPurposeAllocator(.{}){};
 const allocator = gpa.allocator();
 
 pub fn init() void {
-    sig.init(quit, exit);
     fd = posix.socket(posix.AF.UNIX, posix.SOCK.DGRAM, 0) catch |e| {
         std.log.err("Server socket failed: {}", .{e});
         return;
@@ -31,17 +27,17 @@ pub fn init() void {
     defer posix.close(fd);
     var addr: posix.sockaddr.un = undefined;
     addr.family = posix.AF.UNIX;
-    PATH = path.getPath(allocator) catch {
+    const path = @import("path.zig").getPath(allocator) catch {
         std.log.err("Server not started", .{});
         return;
     };
-    defer allocator.free(PATH);
-    @memcpy(addr.path[0..PATH.len], PATH);
-    posix.bind(fd, @ptrCast(&addr), @intCast(PATH.len + 2)) catch |e| {
+    defer allocator.free(path);
+    @memcpy(addr.path[0..path.len], path);
+    posix.bind(fd, @ptrCast(&addr), @intCast(path.len + 2)) catch |e| {
         std.log.err("Bind failed: {}", .{e});
         return;
     };
-    defer posix.unlink(PATH) catch |e|
+    defer posix.unlink(path) catch |e|
         std.log.err("unlink failed: {}", .{e});
     loop();
 }
@@ -170,26 +166,4 @@ fn cmd(temp: u8) !void {
         .Reset => log.notify("Daily reset", .{}),
         .Update => log.notify("Settings updated", .{}),
     }
-}
-
-fn quit(_: i32) callconv(.C) void {
-    posix.unlink(PATH) catch |e| std.log.err(
-        "unlink failed: {}",
-        .{e},
-    );
-    posix.exit(0);
-}
-
-fn exit(signal: i32) callconv(.C) void {
-    posix.unlink(PATH) catch |e| std.log.err(
-        "unlink failed: {}",
-        .{e},
-    );
-    switch (signal) {
-        posix.SIG.ILL => std.log.err("Illegal instruction", .{}),
-        posix.SIG.ABRT => std.log.err("Error program aborted", .{}),
-        posix.SIG.SEGV => std.log.err("Segmentation fault", .{}),
-        else => {},
-    }
-    posix.exit(1);
 }
