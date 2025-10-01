@@ -166,4 +166,8 @@ fn cmd(temp: u8) !void {
         .Reset => log.notify("Daily reset", .{}),
         .Update => log.notify("Settings updated", .{}),
     }
+    _ = child.wait() catch |e| {
+        std.log.err("child wait failed: {}", .{e});
+        return e;
+    };
 }
