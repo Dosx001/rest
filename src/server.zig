@@ -75,7 +75,7 @@ fn loop() void {
                 bright -= 5;
             },
             .Cron => {},
-            .Reset => bright = 58,
+            .Reset => bright = 100,
             .Update => load(&temps) catch continue,
         }
         const time = c.time(0);
