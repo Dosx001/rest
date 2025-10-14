@@ -36,11 +36,11 @@ pub fn init(msg_type: msg.Type) void {
     };
 }
 
-fn quit(_: i32) callconv(.C) void {
+fn quit(_: i32) callconv(.c) void {
     posix.exit(0);
 }
 
-fn exit(signal: i32) callconv(.C) void {
+fn exit(signal: i32) callconv(.c) void {
     switch (signal) {
         posix.SIG.ILL => std.log.err("Illegal instruction", .{}),
         posix.SIG.ABRT => std.log.err("Error program aborted", .{}),

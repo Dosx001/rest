@@ -12,7 +12,7 @@ pub const Type = enum {
 };
 
 var index: usize = undefined;
-var cmd: ?Type = undefined;
+var cmd: ?Type = null;
 
 pub fn parse() Type {
     for (1..std.os.argv.len) |i| {

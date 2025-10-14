@@ -7,7 +7,7 @@ pub fn init(
 ) void {
     var sa = posix.Sigaction{
         .handler = .{ .handler = quit },
-        .mask = posix.empty_sigset,
+        .mask = posix.sigemptyset(),
         .flags = 0,
     };
     posix.sigaction(posix.SIG.HUP, &sa, null);

@@ -115,7 +115,7 @@ fn load(buf: *[24]u8) !void {
         return e;
     };
     defer allocator.free(data);
-    var status: std.zon.parse.Status = .{};
+    var status: std.zon.parse.Diagnostics = .{};
     const parsed = std.zon.parse.fromSlice(
         Settings,
         allocator,

@@ -71,8 +71,8 @@ fn event_handler(
     _: ?*c.sd_device_monitor,
     _: ?*c.sd_device,
     _: ?*anyopaque,
-) callconv(.C) c_int {
-    std.time.sleep(2 * std.time.ns_per_s);
+) callconv(.c) c_int {
+    std.Thread.sleep(2 * std.time.ns_per_s);
     client.init(.Cron);
     return 0;
 }
@@ -89,7 +89,7 @@ fn quit(
     _: ?*c.sd_event_source,
     _: [*c]const c.struct_signalfd_siginfo,
     _: ?*anyopaque,
-) callconv(.C) c_int {
+) callconv(.c) c_int {
     unlink(0);
     return 0;
 }
@@ -98,7 +98,7 @@ fn exit(
     _: ?*c.sd_event_source,
     info: [*c]const c.struct_signalfd_siginfo,
     _: ?*anyopaque,
-) callconv(.C) c_int {
+) callconv(.c) c_int {
     switch (info.*.ssi_signo) {
         std.posix.SIG.ILL => std.log.err("Illegal instruction", .{}),
         std.posix.SIG.ABRT => std.log.err("Error program aborted", .{}),
